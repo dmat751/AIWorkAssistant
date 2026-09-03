@@ -84,23 +84,29 @@ final class CursorApprovalMonitor: ObservableObject {
     @Published private(set) var lastError: String?
     @Published private(set) var lastPushAt: Date?
 
+    private struct PendingShellApproval {
+        let event: CursorApprovalEvent
+        let queuedAt: Date
+    }
+
     private let tailer: CursorApprovalLogTailer
     private let ntfyClient: CursorNtfySending
     private var pollTimer: Timer?
-    private var recentDedupeKeys: [String: Date] = [:]
-    private let dedupeWindow: TimeInterval
+    private var pendingShellApprovals: [String: PendingShellApproval] = [:]
+    private var sessionDedupeKeys: Set<String> = []
     private let pollInterval: TimeInterval
+    private let pendingDelay: TimeInterval
 
     init(
         tailer: CursorApprovalLogTailer = CursorApprovalLogTailer(),
         ntfyClient: CursorNtfySending,
         pollInterval: TimeInterval = 2.0,
-        dedupeWindow: TimeInterval = 120
+        pendingDelay: TimeInterval = 1.5
     ) {
         self.tailer = tailer
         self.ntfyClient = ntfyClient
         self.pollInterval = pollInterval
-        self.dedupeWindow = dedupeWindow
+        self.pendingDelay = pendingDelay
     }
 
     convenience init(envFileURL: URL) {
@@ -127,25 +133,61 @@ final class CursorApprovalMonitor: ObservableObject {
     }
 
     func poll() {
-        pruneDedupeKeys()
-
         for file in tailer.discoverLogFiles() {
             if tailer.fileStates[file.path] == nil {
                 try? tailer.initializeAtEnd(of: file)
             }
 
             guard let lines = try? tailer.readNewLines(from: file) else { continue }
-            for line in lines {
-                handle(line: line)
-            }
+            handle(lines: lines)
         }
     }
 
     func handle(line: String) {
-        guard let event = CursorApprovalLogParser.parse(line: line) else { return }
-        guard !isDuplicate(event.dedupeKey) else { return }
+        handle(lines: [line])
+    }
 
-        recentDedupeKeys[event.dedupeKey] = Date()
+    func handle(lines: [String]) {
+        for line in lines {
+            guard let entry = CursorApprovalLogParser.parse(line: line) else { continue }
+            switch entry {
+            case .push(let event):
+                sendPushIfNeeded(event)
+            case .pendingShell(let event):
+                queuePendingShell(event)
+            case .resolveShell(let toolCallId):
+                resolvePendingShell(toolCallId: toolCallId)
+            }
+        }
+        flushExpiredPending()
+    }
+
+    func flushExpiredPending(now: Date = Date()) {
+        let readyKeys = pendingShellApprovals.compactMap { key, pending -> String? in
+            now.timeIntervalSince(pending.queuedAt) >= pendingDelay ? key : nil
+        }
+
+        for key in readyKeys {
+            guard let pending = pendingShellApprovals.removeValue(forKey: key) else { continue }
+            sendPushIfNeeded(pending.event)
+        }
+    }
+
+    private func queuePendingShell(_ event: CursorApprovalEvent) {
+        guard !sessionDedupeKeys.contains(event.dedupeKey) else { return }
+        pendingShellApprovals[event.dedupeKey] = PendingShellApproval(event: event, queuedAt: Date())
+    }
+
+    private func resolvePendingShell(toolCallId: String) {
+        pendingShellApprovals.removeValue(forKey: "shell:\(toolCallId)")
+        pendingShellApprovals.removeValue(forKey: "shell:run:\(toolCallId)")
+        sessionDedupeKeys.insert("shell:\(toolCallId)")
+        sessionDedupeKeys.insert("shell:run:\(toolCallId)")
+    }
+
+    private func sendPushIfNeeded(_ event: CursorApprovalEvent) {
+        guard !sessionDedupeKeys.contains(event.dedupeKey) else { return }
+        sessionDedupeKeys.insert(event.dedupeKey)
 
         Task {
             do {
@@ -156,15 +198,5 @@ final class CursorApprovalMonitor: ObservableObject {
                 lastError = error.localizedDescription
             }
         }
-    }
-
-    private func isDuplicate(_ key: String) -> Bool {
-        guard let seenAt = recentDedupeKeys[key] else { return false }
-        return Date().timeIntervalSince(seenAt) < dedupeWindow
-    }
-
-    private func pruneDedupeKeys() {
-        let now = Date()
-        recentDedupeKeys = recentDedupeKeys.filter { now.timeIntervalSince($0.value) < dedupeWindow }
     }
 }

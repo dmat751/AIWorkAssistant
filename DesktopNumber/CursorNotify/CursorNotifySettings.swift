@@ -126,6 +126,7 @@ final class CursorNotifySettings: ObservableObject {
 
     private let fileManager: FileManager
     private let bundle: Bundle
+    private let resourceDirectory: URL?
     private let cursorDirectory: URL
     private let hooksDirectory: URL
     private let envFileURL: URL
@@ -133,6 +134,7 @@ final class CursorNotifySettings: ObservableObject {
     init(
         fileManager: FileManager = .default,
         bundle: Bundle = .main,
+        resourceDirectory: URL? = nil,
         hooksDirectory: URL? = nil,
         envFileURL: URL? = nil,
         cursorDirectory: URL? = nil,
@@ -142,6 +144,7 @@ final class CursorNotifySettings: ObservableObject {
     ) {
         self.fileManager = fileManager
         self.bundle = bundle
+        self.resourceDirectory = resourceDirectory
         let home = fileManager.homeDirectoryForCurrentUser
         let defaultCursorDirectory = home.appendingPathComponent(".cursor", isDirectory: true)
         if let hooksDirectory {
@@ -321,6 +324,7 @@ final class CursorNotifySettings: ObservableObject {
         CursorNotifyInstaller(
             fileManager: fileManager,
             bundle: bundle,
+            resourceDirectory: resourceDirectory,
             cursorDirectory: cursorDirectory
         )
     }

@@ -13,15 +13,38 @@ struct CursorApprovalEvent: Equatable {
     let body: String
 }
 
+enum CursorApprovalLogEntry: Equatable {
+    case push(CursorApprovalEvent)
+    case pendingShell(CursorApprovalEvent)
+    case resolveShell(toolCallId: String)
+}
+
 enum CursorApprovalLogParser {
-    static func parse(line: String) -> CursorApprovalEvent? {
+    static func parse(line: String) -> CursorApprovalLogEntry? {
+        if let toolCallId = parseShellGateResolutionToolCallId(line: line) {
+            return .resolveShell(toolCallId: toolCallId)
+        }
         if let event = parseStructuredShellApproval(line: line) {
-            return event
+            return .pendingShell(event)
         }
         if let event = parseShellRunConfirmation(line: line) {
-            return event
+            return .pendingShell(event)
         }
-        return parseMCPAllowlistApproval(line: line)
+        if let event = parseMCPAllowlistApproval(line: line) {
+            return .push(event)
+        }
+        return nil
+    }
+
+    private static func parseShellGateResolutionToolCallId(line: String) -> String? {
+        guard line.contains("Shell stream: approval gate blocked command")
+            || line.contains("Shell stream: approval gate allowed command") else {
+            return nil
+        }
+        guard let toolCallId = metadataValue(in: line, key: "toolCallId"), !toolCallId.isEmpty else {
+            return nil
+        }
+        return toolCallId
     }
 
     private static func parseStructuredShellApproval(line: String) -> CursorApprovalEvent? {

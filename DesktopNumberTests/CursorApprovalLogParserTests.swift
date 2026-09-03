@@ -2,40 +2,69 @@ import XCTest
 @testable import DesktopNumber
 
 final class CursorApprovalLogParserTests: XCTestCase {
-    func testParsesStructuredShellApproval() {
+    func testParsesStructuredShellApprovalAsPending() {
         let line = """
         2026-08-07 12:40:47.496 [info] {"level":"info","key":"agent_exec","message":"Shell permissions: requesting shell approval","metadata":{"toolCallId":"tool_15788fea-0b0a-4b80-9777-df179daae47","hookForcesPrompt":"false","requestedPolicyType":"insecure_none","commandCount":"3"}}
         """
 
-        let event = CursorApprovalLogParser.parse(line: line)
+        let entry = CursorApprovalLogParser.parse(line: line)
 
-        XCTAssertEqual(event?.kind, .shell)
-        XCTAssertEqual(event?.dedupeKey, "shell:tool_15788fea-0b0a-4b80-9777-df179daae47")
-        XCTAssertEqual(event?.title, "Cursor: approve")
-        XCTAssertTrue(event?.body.contains("Shell approval needed") == true)
+        guard case .pendingShell(let event) = entry else {
+            return XCTFail("Expected pending shell approval")
+        }
+        XCTAssertEqual(event.kind, .shell)
+        XCTAssertEqual(event.dedupeKey, "shell:tool_15788fea-0b0a-4b80-9777-df179daae47")
+        XCTAssertEqual(event.title, "Cursor: approve")
+        XCTAssertTrue(event.body.contains("Shell approval needed"))
     }
 
-    func testParsesShellApprovalEvenWhenHookForcedPrompt() {
+    func testParsesShellApprovalEvenWhenHookForcedPromptAsPending() {
         let line = """
         {"message":"Shell permissions: requesting shell approval","metadata":{"toolCallId":"tool_hook","hookForcesPrompt":"true","requestedPolicyType":"insecure_none","commandCount":"1"}}
         """
 
-        let event = CursorApprovalLogParser.parse(line: line)
+        guard case .pendingShell(let event) = CursorApprovalLogParser.parse(line: line) else {
+            return XCTFail("Expected pending shell approval")
+        }
 
-        XCTAssertEqual(event?.kind, .shell)
-        XCTAssertEqual(event?.dedupeKey, "shell:tool_hook")
+        XCTAssertEqual(event.kind, .shell)
+        XCTAssertEqual(event.dedupeKey, "shell:tool_hook")
     }
 
-    func testParsesShellRunConfirmationWaitingInUI() {
+    func testParsesShellRunConfirmationAsPending() {
         let line = """
         {"message":"Shell permissions: auto-approved shell command","metadata":{"toolCallId":"tool_expo","allCommandsPreapproved":"true","allCommandsAllowlisted":"false","mergedPolicyType":"workspace_readwrite"}}
         """
 
-        let event = CursorApprovalLogParser.parse(line: line)
+        guard case .pendingShell(let event) = CursorApprovalLogParser.parse(line: line) else {
+            return XCTFail("Expected pending shell run confirmation")
+        }
 
-        XCTAssertEqual(event?.kind, .shell)
-        XCTAssertEqual(event?.dedupeKey, "shell:run:tool_expo")
-        XCTAssertEqual(event?.body, "Shell run waiting for confirmation (workspace_readwrite)")
+        XCTAssertEqual(event.kind, .shell)
+        XCTAssertEqual(event.dedupeKey, "shell:run:tool_expo")
+        XCTAssertEqual(event.body, "Shell run waiting for confirmation (workspace_readwrite)")
+    }
+
+    func testParsesShellGateBlockedResolution() {
+        let line = """
+        {"message":"Shell stream: approval gate blocked command","metadata":{"toolCallId":"tool_5a1254fc-ea83-4278-a4aa-2f756e4d617","blockReasonType":"userRejected"}}
+        """
+
+        XCTAssertEqual(
+            CursorApprovalLogParser.parse(line: line),
+            .resolveShell(toolCallId: "tool_5a1254fc-ea83-4278-a4aa-2f756e4d617")
+        )
+    }
+
+    func testParsesShellGateAllowedResolution() {
+        let line = """
+        {"message":"Shell stream: approval gate allowed command","metadata":{"toolCallId":"tool_20961923-a42d-4bf3-87bd-9442972c5c7"}}
+        """
+
+        XCTAssertEqual(
+            CursorApprovalLogParser.parse(line: line),
+            .resolveShell(toolCallId: "tool_20961923-a42d-4bf3-87bd-9442972c5c7")
+        )
     }
 
     func testIgnoresAutoApprovedAllowlistedShell() {
@@ -54,17 +83,19 @@ final class CursorApprovalLogParserTests: XCTestCase {
         XCTAssertNil(CursorApprovalLogParser.parse(line: line))
     }
 
-    func testParsesMCPAllowlistApproval() {
+    func testParsesMCPAllowlistApprovalAsImmediatePush() {
         let line = """
         2026-07-27 14:50:45.474 [info] [permissions-service] shouldBlockMcp: needsApproval (not in allowlist) toolName="cursor_dialog", providerIdentifier="cursor-app-control", approvalMode="allowlist"
         """
 
-        let event = CursorApprovalLogParser.parse(line: line)
+        guard case .push(let event) = CursorApprovalLogParser.parse(line: line) else {
+            return XCTFail("Expected immediate MCP push")
+        }
 
-        XCTAssertEqual(event?.kind, .mcp)
-        XCTAssertEqual(event?.title, "Cursor: approve")
-        XCTAssertEqual(event?.body, "MCP approval needed: cursor_dialog (cursor-app-control)")
-        XCTAssertTrue(event?.dedupeKey.hasPrefix("mcp:cursor-app-control:cursor_dialog:") == true)
+        XCTAssertEqual(event.kind, .mcp)
+        XCTAssertEqual(event.title, "Cursor: approve")
+        XCTAssertEqual(event.body, "MCP approval needed: cursor_dialog (cursor-app-control)")
+        XCTAssertTrue(event.dedupeKey.hasPrefix("mcp:cursor-app-control:cursor_dialog:"))
     }
 }
 

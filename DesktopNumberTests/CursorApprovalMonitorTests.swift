@@ -3,16 +3,16 @@ import XCTest
 
 @MainActor
 final class CursorApprovalMonitorTests: XCTestCase {
-    func testSendsPushForApprovalEvent() async {
+    func testSendsPushForMCPApprovalImmediately() async {
         let sender = MockNtfySender()
         let monitor = CursorApprovalMonitor(
             ntfyClient: sender,
             pollInterval: 60,
-            dedupeWindow: 120
+            pendingDelay: 1.5
         )
 
         let line = """
-        {"message":"Shell permissions: requesting shell approval","metadata":{"toolCallId":"tool_123","hookForcesPrompt":"false","requestedPolicyType":"insecure_none","commandCount":"1"}}
+        shouldBlockMcp: needsApproval (not in allowlist) toolName="cursor_dialog", providerIdentifier="cursor-app-control"
         """
         monitor.handle(line: line)
 
@@ -21,22 +21,85 @@ final class CursorApprovalMonitorTests: XCTestCase {
         XCTAssertEqual(sender.sent.first?.title, "Cursor: approve")
     }
 
-    func testDedupesRepeatedApprovalEvents() async {
+    func testDoesNotPushWhenShellApprovalAutoResolvesInSameBatch() async {
         let sender = MockNtfySender()
         let monitor = CursorApprovalMonitor(
             ntfyClient: sender,
             pollInterval: 60,
-            dedupeWindow: 120
+            pendingDelay: 1.5
+        )
+
+        let requesting = """
+        {"message":"Shell permissions: requesting shell approval","metadata":{"toolCallId":"tool_5a1254fc","requestedPolicyType":"insecure_none","commandCount":"2"}}
+        """
+        let blocked = """
+        {"message":"Shell stream: approval gate blocked command","metadata":{"toolCallId":"tool_5a1254fc","blockReasonType":"userRejected"}}
+        """
+        monitor.handle(lines: [requesting, blocked])
+
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(sender.sent.count, 0)
+    }
+
+    func testSendsPushAfterPendingShellDelayExpires() async {
+        let sender = MockNtfySender()
+        let monitor = CursorApprovalMonitor(
+            ntfyClient: sender,
+            pollInterval: 60,
+            pendingDelay: 0.05
         )
 
         let line = """
-        {"message":"Shell permissions: requesting shell approval","metadata":{"toolCallId":"tool_dup","hookForcesPrompt":"false"}}
+        {"message":"Shell permissions: requesting shell approval","metadata":{"toolCallId":"tool_123","hookForcesPrompt":"false","requestedPolicyType":"insecure_none","commandCount":"1"}}
         """
         monitor.handle(line: line)
-        monitor.handle(line: line)
+        monitor.flushExpiredPending(now: Date().addingTimeInterval(0.1))
 
         try? await Task.sleep(nanoseconds: 100_000_000)
         XCTAssertEqual(sender.sent.count, 1)
+        XCTAssertEqual(sender.sent.first?.title, "Cursor: approve")
+    }
+
+    func testDoesNotPushAgainForReplayedToolCallId() async {
+        let sender = MockNtfySender()
+        let monitor = CursorApprovalMonitor(
+            ntfyClient: sender,
+            pollInterval: 60,
+            pendingDelay: 0.05
+        )
+
+        let requesting = """
+        {"message":"Shell permissions: requesting shell approval","metadata":{"toolCallId":"tool_replay","requestedPolicyType":"insecure_none","commandCount":"1"}}
+        """
+        let blocked = """
+        {"message":"Shell stream: approval gate blocked command","metadata":{"toolCallId":"tool_replay","blockReasonType":"userRejected"}}
+        """
+        monitor.handle(lines: [requesting, blocked])
+        monitor.handle(line: requesting)
+        monitor.flushExpiredPending(now: Date().addingTimeInterval(0.1))
+
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(sender.sent.count, 0)
+    }
+
+    func testDoesNotPushWhenAutoApprovedShellIsImmediatelyAllowed() async {
+        let sender = MockNtfySender()
+        let monitor = CursorApprovalMonitor(
+            ntfyClient: sender,
+            pollInterval: 60,
+            pendingDelay: 1.5
+        )
+
+        let autoApproved = """
+        {"message":"Shell permissions: auto-approved shell command","metadata":{"toolCallId":"tool_expo","allCommandsPreapproved":"true","allCommandsAllowlisted":"false","mergedPolicyType":"workspace_readwrite"}}
+        """
+        let allowed = """
+        {"message":"Shell stream: approval gate allowed command","metadata":{"toolCallId":"tool_expo"}}
+        """
+        monitor.handle(lines: [autoApproved, allowed])
+
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        XCTAssertEqual(sender.sent.count, 0)
     }
 
     func testPollReadsNewApprovalLinesFromLogFile() async throws {
@@ -52,7 +115,7 @@ final class CursorApprovalMonitorTests: XCTestCase {
             tailer: tailer,
             ntfyClient: sender,
             pollInterval: 60,
-            dedupeWindow: 120
+            pendingDelay: 0.05
         )
 
         monitor.start()
@@ -60,6 +123,7 @@ final class CursorApprovalMonitorTests: XCTestCase {
         try approvalLine.append(to: fileURL)
 
         monitor.poll()
+        monitor.flushExpiredPending(now: Date().addingTimeInterval(0.1))
 
         try? await Task.sleep(nanoseconds: 100_000_000)
         XCTAssertEqual(sender.sent.count, 1)

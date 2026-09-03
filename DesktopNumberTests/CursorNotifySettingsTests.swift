@@ -203,6 +203,57 @@ final class CursorNotifySettingsTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: hookURL.path))
     }
 
+    func testSetEnabledInstallsStopHookWhenEnabled() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+        let hooksRoot = root.appendingPathComponent("CursorHooks", isDirectory: true)
+        let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
+        try FileManager.default.createDirectory(at: cursorRoot, withIntermediateDirectories: true)
+
+        let repoHooks = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("cursor-hooks", isDirectory: true)
+        try FileManager.default.createDirectory(at: hooksRoot, withIntermediateDirectories: true)
+        for script in ["notify-ntfy.sh", "on-stop.sh", "notify.env.example"] {
+            try FileManager.default.copyItem(
+                at: repoHooks.appendingPathComponent(script),
+                to: hooksRoot.appendingPathComponent(script)
+            )
+        }
+
+        let hooksDirectory = cursorRoot.appendingPathComponent("hooks", isDirectory: true)
+        let monitor = CursorApprovalMonitor(
+            tailer: CursorApprovalLogTailer(logsRoot: root),
+            ntfyClient: MockSettingsNtfySender(),
+            pollInterval: 60
+        )
+        let settings = CursorNotifySettings(
+            fileManager: .default,
+            resourceDirectory: hooksRoot,
+            hooksDirectory: hooksDirectory,
+            envFileURL: hooksDirectory.appendingPathComponent("notify.env"),
+            cursorDirectory: cursorRoot,
+            approvalMonitor: monitor,
+            autoMigrate: false,
+            startMonitor: false
+        )
+
+        await settings.setEnabled(true)
+
+        XCTAssertTrue(settings.isEnabled)
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: hooksDirectory.appendingPathComponent("on-stop.sh").path
+            )
+        )
+        let hooksJSON = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: cursorRoot.appendingPathComponent("hooks.json"))
+        ) as? [String: Any]
+        let stopHooks = (hooksJSON?["hooks"] as? [String: Any])?["stop"] as? [[String: Any]]
+        XCTAssertEqual(stopHooks?.first?["command"] as? String, "./hooks/on-stop.sh")
+    }
+
     func testSetTopicWritesToEnvFile() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
