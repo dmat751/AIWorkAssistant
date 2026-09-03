@@ -19,8 +19,8 @@ See [Quick Start](#quick-start) to build and run in one step.
 From the repo root:
 
 ```bash
-git clone <repo-url>
-cd <repo-directory>
+git clone https://github.com/dmat751/MacOS-multi-desktop-plugin.git
+cd MacOS-multi-desktop-plugin
 ./scripts/build-and-open-desktop-number.sh
 ```
 
@@ -41,15 +41,16 @@ Clicking the icon opens a menu with:
 - current desktop number
 - today's Cursor cost, token usage, and **Refresh Cursor Usage**
 - **Cursor Agent Push** — toggles for finish and approve notifications, **ntfy topic** field, and **Send Test Push**
-- **Office / Power** status (AC, prevent-sleep setting, lock-screen safety) and **Refresh Power Status**
-- **Commute Mode** controls, **Grant Access**, and safety status
+- **Office / Power** status (AC, prevent-sleep setting, lock-screen safety), **Enable Office Mode**, and **Refresh Power Status**
+- **Commute Mode** controls and safety status
+- **Setup** — enable office power settings, install or remove commute sudo access and Cursor push hooks
 - **Quit**
 
 ## Commute mode setup
 
 Commute mode uses `pmset -a disablesleep` so a MacBook can stay awake with the lid closed. This requires narrowly scoped, passwordless `sudo` access for exactly two commands.
 
-Install once from the menu (**Grant Access** next to Start Commute Mode) or manually:
+Install once from the menu (**Setup** → **Grant Access**, or the **Grant Access** button next to Start Commute Mode) or manually:
 
 ```bash
 sudo ./scripts/install-commute-permission.sh
@@ -61,10 +62,42 @@ Uninstall:
 sudo ./scripts/uninstall-commute-permission.sh
 ```
 
+Or from the menu: **Setup** → **Remove Access**.
+
 The installer writes `/etc/sudoers.d/desktopnumber-commute` allowing only:
 
 - `/usr/bin/pmset -a disablesleep 1`
 - `/usr/bin/pmset -a disablesleep 0`
+
+## Office mode
+
+Office mode is a **read-only safety check** for working at your desk with the Mac plugged in and the screen locked (Ctrl+Cmd+Q). It verifies that macOS will not sleep while on AC power with the display off.
+
+The menu shows:
+
+| Line | Meaning |
+| --- | --- |
+| **On AC power** | Mac is plugged in |
+| **Prevent sleep when display off** | AC power profile has `sleep 0` in `pmset` |
+| **Office lock-screen safe** | Both conditions above are true |
+
+When **Office mode** shows **Needs attention**, the AC sleep setting is not `0` (for example `sleep 1`). The Mac may sleep after locking the screen even though it is plugged in.
+
+### Enable office mode
+
+Any of these works:
+
+1. **Setup** → **Enable Office Mode** or **Enable Office Mode** in the Office / Power section (runs `sudo pmset -c sleep 0`; asks for your admin password once)
+2. **System Settings** → **Battery** → **Options** → enable **Prevent automatic sleeping on power adapter when the display is off**
+3. Terminal: `sudo pmset -c sleep 0`
+
+To revert to a typical default:
+
+```bash
+sudo pmset -c sleep 10
+```
+
+Office mode is separate from **Commute mode**. Office mode only checks the AC sleep setting; it does not keep the Mac awake with the lid closed.
 
 ## Office vs commute
 
@@ -87,7 +120,7 @@ There are two push paths:
 | Agent finished | Cursor `stop` hook in `~/.cursor/hooks/` | No (Cursor runs the hook) |
 | Approve needed | DesktopNumber log monitor tails Cursor logs | Yes |
 
-Install from the DesktopNumber menu by enabling **Push when agent finishes** or **Push when approve needed**, or from the terminal:
+Install from the DesktopNumber menu by enabling **Push when agent finishes** or **Push when approve needed**, from **Setup** → **Install Hooks**, or from the terminal:
 
 ```bash
 ./scripts/install-cursor-notify-hooks.sh
@@ -98,6 +131,8 @@ Uninstall:
 ```bash
 ./scripts/uninstall-cursor-notify-hooks.sh
 ```
+
+Or from the menu: **Setup** → **Uninstall Hooks**.
 
 The installer:
 
@@ -151,13 +186,13 @@ Alternatively, you can copy the app to `/Applications` and add it from there.
 
 All scripts live in `scripts/` and should be run from the repo root:
 
-| Script | Purpose |
-| --- | --- |
-| `./scripts/build-and-open-desktop-number.sh` | Build Release and open the app |
-| `./scripts/install-commute-permission.sh` | Install commute-mode sudoers entry (run with `sudo`) |
-| `./scripts/uninstall-commute-permission.sh` | Remove commute-mode sudoers entry (run with `sudo`) |
-| `./scripts/install-cursor-notify-hooks.sh` | Install Cursor notify hooks into `~/.cursor/` |
-| `./scripts/uninstall-cursor-notify-hooks.sh` | Remove DesktopNumber Cursor notify hooks |
+| Script | Purpose | In app menu |
+| --- | --- | --- |
+| `./scripts/build-and-open-desktop-number.sh` | Build Release and open the app | — |
+| `./scripts/install-commute-permission.sh` | Install commute-mode sudoers entry (run with `sudo`) | **Setup** → **Grant Access** |
+| `./scripts/uninstall-commute-permission.sh` | Remove commute-mode sudoers entry (run with `sudo`) | **Setup** → **Remove Access** |
+| `./scripts/install-cursor-notify-hooks.sh` | Install Cursor notify hooks into `~/.cursor/` | **Setup** → **Install Hooks** |
+| `./scripts/uninstall-cursor-notify-hooks.sh` | Remove DesktopNumber Cursor notify hooks | **Setup** → **Uninstall Hooks** |
 
 ## Manual build
 

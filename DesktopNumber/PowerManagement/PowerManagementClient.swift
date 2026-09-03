@@ -2,6 +2,7 @@ import Foundation
 
 enum PowerManagementError: LocalizedError {
     case sleepStateVerificationFailed
+    case officeModeVerificationFailed
     case passwordlessAccessMissing
     case commandFailed(String)
 
@@ -9,6 +10,8 @@ enum PowerManagementError: LocalizedError {
         switch self {
         case .sleepStateVerificationFailed:
             return "pmset did not apply the expected sleep setting."
+        case .officeModeVerificationFailed:
+            return "pmset did not apply the expected office power setting."
         case .passwordlessAccessMissing:
             return "Passwordless pmset access is not installed. Run scripts/install-commute-permission.sh."
         case .commandFailed(let message):
@@ -21,19 +24,27 @@ protocol PowerManagementClient {
     func isSleepDisabled() throws -> Bool
     func setSleepDisabled(_ disabled: Bool) throws
     func officePowerStatus() throws -> OfficePowerStatus
+    func enableOfficePowerMode() throws
     func hasPasswordlessPmsetAccess() -> Bool
 }
 
 final class PmsetPowerManagementClient: PowerManagementClient {
     private let commandExecutor: CommandExecutor
     private let powerStatusMonitor: PowerStatusMonitor
+    private let privilegedRunner: PrivilegedScriptRunner
 
     init(
         commandExecutor: CommandExecutor = ProcessCommandExecutor(),
-        powerStatusMonitor: PowerStatusMonitor = PowerStatusMonitor()
+        powerStatusMonitor: PowerStatusMonitor = PowerStatusMonitor(),
+        privilegedRunner: PrivilegedScriptRunner = UnavailablePrivilegedScriptRunner()
     ) {
         self.commandExecutor = commandExecutor
         self.powerStatusMonitor = powerStatusMonitor
+        self.privilegedRunner = privilegedRunner
+    }
+
+    static func enableOfficeModeShellCommand() -> String {
+        "/usr/bin/pmset -c sleep 0"
     }
 
     func isSleepDisabled() throws -> Bool {
@@ -72,6 +83,15 @@ final class PmsetPowerManagementClient: PowerManagementClient {
             isOnACPower: powerStatusMonitor.isOnACPower(),
             acSleepMinutes: profiles.ac.sleepMinutes
         )
+    }
+
+    func enableOfficePowerMode() throws {
+        _ = try privilegedRunner.runPrivilegedShellScript(Self.enableOfficeModeShellCommand())
+
+        let status = try officePowerStatus()
+        guard status.preventSleepWhenDisplayOff else {
+            throw PowerManagementError.officeModeVerificationFailed
+        }
     }
 
     func hasPasswordlessPmsetAccess() -> Bool {

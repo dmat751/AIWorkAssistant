@@ -21,6 +21,7 @@
 		C10000010000000000000003 /* OfficePowerStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000003 /* OfficePowerStatus.swift */; };
 		C10000010000000000000004 /* PowerStatusMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000004 /* PowerStatusMonitor.swift */; };
 		C10000010000000000000005 /* PowerManagementClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000005 /* PowerManagementClient.swift */; };
+		C10000010000000000000011 /* PrivilegedScriptRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000011 /* PrivilegedScriptRunner.swift */; };
 		C10000010000000000000006 /* CommuteModeLease.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000006 /* CommuteModeLease.swift */; };
 		C10000010000000000000007 /* CommuteFailsafeRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000007 /* CommuteFailsafeRunner.swift */; };
 		C10000010000000000000008 /* CommuteModeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000008 /* CommuteModeController.swift */; };
@@ -32,6 +33,7 @@
 		D10000010000000000000004 /* OfficePowerStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000003 /* OfficePowerStatus.swift */; };
 		D10000010000000000000005 /* PowerStatusMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000004 /* PowerStatusMonitor.swift */; };
 		D10000010000000000000006 /* PowerManagementClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000005 /* PowerManagementClient.swift */; };
+		D10000010000000000000009 /* PrivilegedScriptRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000011 /* PrivilegedScriptRunner.swift */; };
 		D10000010000000000000007 /* CommuteModeLease.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000006 /* CommuteModeLease.swift */; };
 		D10000010000000000000008 /* CommuteFailsafePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = C10000020000000000000009 /* CommuteFailsafePolicy.swift */; };
 		F10000010000000000000001 /* CommuteFailsafe in Copy Files */ = {isa = PBXBuildFile; fileRef = D10000030000000000000001 /* CommuteFailsafe */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -112,14 +114,16 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/scripts/install-commute-permission.sh",
+				"$(SRCROOT)/scripts/uninstall-commute-permission.sh",
 			);
 			name = "Copy Commute Scripts";
 			outputPaths = (
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/CommuteScripts/install-commute-permission.sh",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/CommuteScripts/uninstall-commute-permission.sh",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\nDST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/CommuteScripts\"\nmkdir -p \"$DST\"\ncp \"${SRCROOT}/scripts/install-commute-permission.sh\" \"$DST/\"\nchmod 755 \"$DST/install-commute-permission.sh\"\n";
+			shellScript = "set -e\nDST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/CommuteScripts\"\nmkdir -p \"$DST\"\ncp \"${SRCROOT}/scripts/install-commute-permission.sh\" \\\n   \"${SRCROOT}/scripts/uninstall-commute-permission.sh\" \\\n   \"$DST/\"\nchmod 755 \"$DST/install-commute-permission.sh\" \"$DST/uninstall-commute-permission.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -141,6 +145,7 @@
 		C10000020000000000000003 /* OfficePowerStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfficePowerStatus.swift; sourceTree = "<group>"; };
 		C10000020000000000000004 /* PowerStatusMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerStatusMonitor.swift; sourceTree = "<group>"; };
 		C10000020000000000000005 /* PowerManagementClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PowerManagementClient.swift; sourceTree = "<group>"; };
+		C10000020000000000000011 /* PrivilegedScriptRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivilegedScriptRunner.swift; sourceTree = "<group>"; };
 		C10000020000000000000006 /* CommuteModeLease.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteModeLease.swift; sourceTree = "<group>"; };
 		C10000020000000000000007 /* CommuteFailsafeRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteFailsafeRunner.swift; sourceTree = "<group>"; };
 		C10000020000000000000008 /* CommuteModeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommuteModeController.swift; sourceTree = "<group>"; };
@@ -232,6 +237,7 @@
 				C10000020000000000000003 /* OfficePowerStatus.swift */,
 				C10000020000000000000004 /* PowerStatusMonitor.swift */,
 				C10000020000000000000005 /* PowerManagementClient.swift */,
+				C10000020000000000000011 /* PrivilegedScriptRunner.swift */,
 			);
 			path = PowerManagement;
 			sourceTree = "<group>";
@@ -409,6 +415,7 @@
 				C10000010000000000000003 /* OfficePowerStatus.swift in Sources */,
 				C10000010000000000000004 /* PowerStatusMonitor.swift in Sources */,
 				C10000010000000000000005 /* PowerManagementClient.swift in Sources */,
+				C10000010000000000000011 /* PrivilegedScriptRunner.swift in Sources */,
 				C10000010000000000000006 /* CommuteModeLease.swift in Sources */,
 				C10000010000000000000007 /* CommuteFailsafeRunner.swift in Sources */,
 				C10000010000000000000008 /* CommuteModeController.swift in Sources */,
@@ -450,6 +457,7 @@
 				D10000010000000000000004 /* OfficePowerStatus.swift in Sources */,
 				D10000010000000000000005 /* PowerStatusMonitor.swift in Sources */,
 				D10000010000000000000006 /* PowerManagementClient.swift in Sources */,
+				D10000010000000000000009 /* PrivilegedScriptRunner.swift in Sources */,
 				D10000010000000000000007 /* CommuteModeLease.swift in Sources */,
 				D10000010000000000000008 /* CommuteFailsafePolicy.swift in Sources */,
 			);

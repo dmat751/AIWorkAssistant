@@ -67,16 +67,24 @@ struct CursorNotifyInstaller {
         fileManager: FileManager = .default,
         bundle: Bundle = .main,
         resourceDirectory: URL? = nil,
-        cursorDirectory: URL? = nil
+        cursorDirectory: URL? = nil,
+        hooksDirectory: URL? = nil,
+        envFileURL: URL? = nil
     ) {
         self.fileManager = fileManager
         self.bundle = bundle
         self.resourceDirectory = resourceDirectory
         let home = fileManager.homeDirectoryForCurrentUser
-        self.cursorDirectory = cursorDirectory ?? home.appendingPathComponent(".cursor", isDirectory: true)
-        hooksDirectory = self.cursorDirectory.appendingPathComponent("hooks", isDirectory: true)
+        let defaultCursorDirectory = home.appendingPathComponent(".cursor", isDirectory: true)
+        if let hooksDirectory {
+            self.hooksDirectory = hooksDirectory
+            self.cursorDirectory = cursorDirectory ?? hooksDirectory.deletingLastPathComponent()
+        } else {
+            self.cursorDirectory = cursorDirectory ?? defaultCursorDirectory
+            self.hooksDirectory = self.cursorDirectory.appendingPathComponent("hooks", isDirectory: true)
+        }
         hooksJSONURL = self.cursorDirectory.appendingPathComponent("hooks.json")
-        envFileURL = hooksDirectory.appendingPathComponent("notify.env")
+        self.envFileURL = envFileURL ?? self.hooksDirectory.appendingPathComponent("notify.env")
     }
 
     func install(sendTestNotification: Bool = true) throws {

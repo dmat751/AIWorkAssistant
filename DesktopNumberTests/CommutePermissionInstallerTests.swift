@@ -52,6 +52,17 @@ final class CommutePermissionInstallerTests: XCTestCase {
 
         XCTAssertEqual(runner.lastCommand, command)
     }
+
+    func testUninstallShellCommandEscapesSpacesInPath() {
+        let command = CommutePermissionInstaller.uninstallShellCommand(
+            scriptPath: "/My Apps/DesktopNumber.app/Contents/Resources/CommuteScripts/uninstall-commute-permission.sh"
+        )
+
+        XCTAssertEqual(
+            command,
+            "/bin/bash '/My Apps/DesktopNumber.app/Contents/Resources/CommuteScripts/uninstall-commute-permission.sh'"
+        )
+    }
 }
 
 private final class MockPrivilegedScriptRunner: PrivilegedScriptRunner {

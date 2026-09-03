@@ -145,8 +145,36 @@ struct MenuBarContentView: View {
                     "Prevent sleep when display off: \(officeStatus.preventSleepWhenDisplayOff ? "ON" : "OFF")"
                 )
                 Text("Office lock-screen safe: \(officeStatus.isOfficeReady ? "Yes" : "No")")
+
+                if !officeStatus.preventSleepWhenDisplayOff {
+                    if !officeStatus.isOnACPower {
+                        Text("Plug in the power adapter.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button(
+                        commuteController.isEnablingOfficeMode ? "Enabling..." : "Enable Office Mode"
+                    ) {
+                        Task { @MainActor in
+                            await commuteController.enableOfficeMode()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(commuteController.isEnablingOfficeMode)
+
+                    Text("Sets pmset -c sleep 0. Asks for your admin password.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             } else {
                 StatusIndicator(title: "Office mode", status: "Unavailable", color: .secondary)
+            }
+
+            if let officeErrorMessage = commuteController.officeErrorMessage {
+                Text(officeErrorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Button("Refresh Power Status") {
@@ -212,6 +240,120 @@ struct MenuBarContentView: View {
                 Text(errorMessage)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Divider()
+
+            DisclosureGroup("Setup") {
+                Text("Office power settings")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if let officeStatus = commuteController.officeStatus {
+                    if officeStatus.isOfficeReady {
+                        StatusIndicator(title: "Office power settings", status: "Ready", color: .green)
+                    } else if !officeStatus.isOnACPower {
+                        StatusIndicator(title: "Office power settings", status: "Plug in power", color: .orange)
+                        Text("Plug in the power adapter, then enable office settings.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        StatusIndicator(title: "Office power settings", status: "Needs setup", color: .orange)
+                        Button(
+                            commuteController.isEnablingOfficeMode ? "Enabling..." : "Enable Office Mode"
+                        ) {
+                            Task { @MainActor in
+                                await commuteController.enableOfficeMode()
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(commuteController.isEnablingOfficeMode)
+
+                        Text("Sets pmset -c sleep 0. Asks for your admin password.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    StatusIndicator(title: "Office power settings", status: "Unavailable", color: .secondary)
+                }
+
+                if let officeErrorMessage = commuteController.officeErrorMessage {
+                    Text(officeErrorMessage)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                Divider()
+
+                Text("Commute sudo access")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if commuteController.hasPasswordlessAccess {
+                    StatusIndicator(title: "Commute sudo access", status: "Installed", color: .green)
+                    Button(
+                        commuteController.isRemovingPermissions ? "Removing..." : "Remove Access"
+                    ) {
+                        Task { @MainActor in
+                            await commuteController.removePermissions()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(commuteController.isRemovingPermissions || commuteController.isActive)
+                } else {
+                    StatusIndicator(title: "Commute sudo access", status: "Not installed", color: .orange)
+                    Button(
+                        commuteController.isInstallingPermissions ? "Installing..." : "Grant Access"
+                    ) {
+                        Task { @MainActor in
+                            await commuteController.installPermissions()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(commuteController.isInstallingPermissions)
+                }
+
+                Text("Requires administrator password once.")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+
+                Text("Cursor push hooks")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if notifySettings.isInstalled {
+                    StatusIndicator(title: "Cursor push hooks", status: "Installed", color: .green)
+                    Button(notifySettings.isUpdating ? "Uninstalling..." : "Uninstall Hooks") {
+                        Task { @MainActor in
+                            await notifySettings.uninstallHooks()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(notifySettings.isUpdating)
+                } else {
+                    StatusIndicator(title: "Cursor push hooks", status: "Not installed", color: .orange)
+                    Button(notifySettings.isUpdating ? "Installing..." : "Install Hooks") {
+                        Task { @MainActor in
+                            await notifySettings.installHooks()
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(notifySettings.isUpdating)
+                }
+
+                if let setupStatus = notifySettings.setupStatus {
+                    Text(setupStatus)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let installError = notifySettings.installError {
+                    Text(installError)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Divider()

@@ -18,10 +18,6 @@ enum CommutePermissionInstallError: LocalizedError {
     }
 }
 
-protocol PrivilegedScriptRunner {
-    func runPrivilegedShellScript(_ shellCommand: String) throws -> String
-}
-
 struct NSAppleScriptPrivilegedRunner: PrivilegedScriptRunner {
     func runPrivilegedShellScript(_ shellCommand: String) throws -> String {
         let source =
@@ -44,21 +40,10 @@ struct NSAppleScriptPrivilegedRunner: PrivilegedScriptRunner {
     }
 }
 
-enum AppleScriptShellEscaping {
-    static func escapeForAppleScriptShell(_ value: String) -> String {
-        value
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-    }
-
-    static func escapeForSingleQuotedShell(_ value: String) -> String {
-        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
-    }
-}
-
 struct CommutePermissionInstaller {
     static let bundledResourceDirectory = "CommuteScripts"
-    static let scriptName = "install-commute-permission.sh"
+    static let installScriptName = "install-commute-permission.sh"
+    static let uninstallScriptName = "uninstall-commute-permission.sh"
 
     private let bundle: Bundle
     private let runner: PrivilegedScriptRunner
@@ -72,12 +57,17 @@ struct CommutePermissionInstaller {
     }
 
     func install(username: String) throws {
-        let scriptURL = try bundledScriptURL()
+        let scriptURL = try bundledScriptURL(named: Self.installScriptName)
         let shellCommand = Self.installShellCommand(
             username: username,
             scriptPath: scriptURL.path
         )
         _ = try runner.runPrivilegedShellScript(shellCommand)
+    }
+
+    func uninstall() throws {
+        let scriptURL = try bundledScriptURL(named: Self.uninstallScriptName)
+        _ = try runner.runPrivilegedShellScript(Self.uninstallShellCommand(scriptPath: scriptURL.path))
     }
 
     static func installShellCommand(username: String, scriptPath: String) -> String {
@@ -86,10 +76,18 @@ struct CommutePermissionInstaller {
         return "export SUDO_USER=\(escapedUser); /bin/bash \(escapedPath)"
     }
 
-    private func bundledScriptURL() throws -> URL {
+    static func uninstallShellCommand(scriptPath: String) -> String {
+        let escapedPath = AppleScriptShellEscaping.escapeForSingleQuotedShell(scriptPath)
+        return "/bin/bash \(escapedPath)"
+    }
+
+    private func bundledScriptURL(named scriptName: String) throws -> URL {
+        let resourceName = (scriptName as NSString).deletingPathExtension
+        let fileExtension = (scriptName as NSString).pathExtension
+
         if let url = bundle.url(
-            forResource: "install-commute-permission",
-            withExtension: "sh",
+            forResource: resourceName,
+            withExtension: fileExtension.isEmpty ? nil : fileExtension,
             subdirectory: Self.bundledResourceDirectory
         ) {
             return url

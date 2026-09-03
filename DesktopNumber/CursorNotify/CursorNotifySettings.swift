@@ -119,6 +119,7 @@ final class CursorNotifySettings: ObservableObject {
     @Published private(set) var migrationStatus: String?
     @Published private(set) var isSendingTestPush = false
     @Published private(set) var testPushStatus: String?
+    @Published private(set) var setupStatus: String?
 
     static let placeholderTopic = CursorNotifyConstants.placeholderTopic
 
@@ -171,7 +172,7 @@ final class CursorNotifySettings: ObservableObject {
         let hasStopHook = fileManager.fileExists(
             atPath: hooksDirectory.appendingPathComponent("on-stop.sh").path
         )
-        isInstalled = hasStopHook || fileManager.fileExists(atPath: envFileURL.path)
+        isInstalled = hasStopHook
         needsMigration = status.needsMigration
 
         guard let contents = try? String(contentsOf: envFileURL, encoding: .utf8) else {
@@ -320,12 +321,60 @@ final class CursorNotifySettings: ObservableObject {
         isSendingTestPush = false
     }
 
+    func installHooks() async {
+        guard !isUpdating else { return }
+
+        isUpdating = true
+        installError = nil
+        setupStatus = nil
+        defer { isUpdating = false }
+
+        let installer = makeInstaller()
+
+        do {
+            try installer.install(sendTestNotification: false)
+            refresh()
+            setupStatus = "Cursor push hooks installed."
+        } catch {
+            installError = error.localizedDescription
+            setupStatus = nil
+            refresh()
+        }
+    }
+
+    func uninstallHooks() async {
+        guard !isUpdating else { return }
+
+        isUpdating = true
+        installError = nil
+        setupStatus = nil
+        defer { isUpdating = false }
+
+        let installer = makeInstaller()
+
+        do {
+            try installer.uninstall()
+            try writeEnvFile { env in
+                CursorNotifyEnvFile(contents: env.settingEnabled(false)).settingApproveEnabled(false)
+            }
+            approvalMonitor.stop()
+            refresh()
+            setupStatus = "Cursor push hooks uninstalled."
+        } catch {
+            installError = error.localizedDescription
+            setupStatus = nil
+            refresh()
+        }
+    }
+
     private func makeInstaller() -> CursorNotifyInstaller {
         CursorNotifyInstaller(
             fileManager: fileManager,
             bundle: bundle,
             resourceDirectory: resourceDirectory,
-            cursorDirectory: cursorDirectory
+            cursorDirectory: cursorDirectory,
+            hooksDirectory: hooksDirectory,
+            envFileURL: envFileURL
         )
     }
 

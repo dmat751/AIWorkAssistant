@@ -16,6 +16,9 @@ final class CommuteModeController: ObservableObject {
     @Published private(set) var errorMessage: String?
     @Published private(set) var hasPasswordlessAccess = false
     @Published private(set) var isInstallingPermissions = false
+    @Published private(set) var isRemovingPermissions = false
+    @Published private(set) var isEnablingOfficeMode = false
+    @Published private(set) var officeErrorMessage: String?
 
     private let powerClient: PowerManagementClient
     private let powerMonitor: PowerStatusMonitor
@@ -28,7 +31,9 @@ final class CommuteModeController: ObservableObject {
     private var failsafeWatchTimer: Timer?
 
     init(
-        powerClient: PowerManagementClient = PmsetPowerManagementClient(),
+        powerClient: PowerManagementClient = PmsetPowerManagementClient(
+            privilegedRunner: NSAppleScriptPrivilegedRunner()
+        ),
         powerMonitor: PowerStatusMonitor = PowerStatusMonitor(),
         stateStore: CommuteModeStateStore = CommuteModeStateStore(),
         failsafeRunner: CommuteFailsafeRunner = CommuteFailsafeRunner(),
@@ -117,6 +122,66 @@ final class CommuteModeController: ObservableObject {
         }
 
         isInstallingPermissions = false
+    }
+
+    func removePermissions() async {
+        guard !isRemovingPermissions else { return }
+        guard hasPasswordlessAccess else { return }
+
+        if isActive {
+            errorMessage = "Stop commute mode before removing sudo access."
+            return
+        }
+
+        isRemovingPermissions = true
+        errorMessage = nil
+
+        let installer = permissionInstaller
+
+        do {
+            try await Task.detached {
+                try installer.uninstall()
+            }.value
+
+            refreshPermissionStatus()
+            if hasPasswordlessAccess {
+                errorMessage = "Removed, but sudo access was still detected. Try restarting the app."
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            refreshPermissionStatus()
+        }
+
+        isRemovingPermissions = false
+    }
+
+    func enableOfficeMode() async {
+        guard !isEnablingOfficeMode else { return }
+
+        isEnablingOfficeMode = true
+        officeErrorMessage = nil
+
+        let client = powerClient
+
+        do {
+            try await Task.detached {
+                try client.enableOfficePowerMode()
+            }.value
+
+            refreshOfficeStatus()
+        } catch let error as CommutePermissionInstallError {
+            if case .cancelled = error {
+                refreshOfficeStatus()
+            } else {
+                officeErrorMessage = error.localizedDescription
+                refreshOfficeStatus()
+            }
+        } catch {
+            officeErrorMessage = error.localizedDescription
+            refreshOfficeStatus()
+        }
+
+        isEnablingOfficeMode = false
     }
 
     func enable() {

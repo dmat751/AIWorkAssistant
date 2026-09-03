@@ -289,6 +289,114 @@ final class CursorNotifySettingsTests: XCTestCase {
 
         XCTAssertEqual(settings.testPushStatus, "Set an ntfy topic first.")
     }
+
+    func testInstallHooksCreatesScriptsAndHooksJSON() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+        let hooksRoot = root.appendingPathComponent("CursorHooks", isDirectory: true)
+        let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
+        try FileManager.default.createDirectory(at: cursorRoot, withIntermediateDirectories: true)
+
+        let repoHooks = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("cursor-hooks", isDirectory: true)
+        try FileManager.default.createDirectory(at: hooksRoot, withIntermediateDirectories: true)
+        for script in ["notify-ntfy.sh", "on-stop.sh", "notify.env.example"] {
+            try FileManager.default.copyItem(
+                at: repoHooks.appendingPathComponent(script),
+                to: hooksRoot.appendingPathComponent(script)
+            )
+        }
+
+        let hooksDirectory = cursorRoot.appendingPathComponent("hooks", isDirectory: true)
+        let monitor = CursorApprovalMonitor(
+            tailer: CursorApprovalLogTailer(logsRoot: root),
+            ntfyClient: MockSettingsNtfySender(),
+            pollInterval: 60
+        )
+        let settings = CursorNotifySettings(
+            fileManager: .default,
+            resourceDirectory: hooksRoot,
+            hooksDirectory: hooksDirectory,
+            envFileURL: hooksDirectory.appendingPathComponent("notify.env"),
+            cursorDirectory: cursorRoot,
+            approvalMonitor: monitor,
+            autoMigrate: false,
+            startMonitor: false
+        )
+
+        await settings.installHooks()
+
+        XCTAssertTrue(settings.isInstalled)
+        XCTAssertEqual(settings.setupStatus, "Cursor push hooks installed.")
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: hooksDirectory.appendingPathComponent("on-stop.sh").path
+            )
+        )
+        let hooksJSON = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: cursorRoot.appendingPathComponent("hooks.json"))
+        ) as? [String: Any]
+        let stopHooks = (hooksJSON?["hooks"] as? [String: Any])?["stop"] as? [[String: Any]]
+        XCTAssertEqual(stopHooks?.first?["command"] as? String, "./hooks/on-stop.sh")
+    }
+
+    func testUninstallHooksRemovesScriptsAndDisablesFlags() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+        let hooksRoot = root.appendingPathComponent("CursorHooks", isDirectory: true)
+        let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
+        try FileManager.default.createDirectory(at: cursorRoot, withIntermediateDirectories: true)
+
+        let repoHooks = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("cursor-hooks", isDirectory: true)
+        try FileManager.default.createDirectory(at: hooksRoot, withIntermediateDirectories: true)
+        for script in ["notify-ntfy.sh", "on-stop.sh", "notify.env.example"] {
+            try FileManager.default.copyItem(
+                at: repoHooks.appendingPathComponent(script),
+                to: hooksRoot.appendingPathComponent(script)
+            )
+        }
+
+        let hooksDirectory = cursorRoot.appendingPathComponent("hooks", isDirectory: true)
+        let monitor = CursorApprovalMonitor(
+            tailer: CursorApprovalLogTailer(logsRoot: root),
+            ntfyClient: MockSettingsNtfySender(),
+            pollInterval: 60
+        )
+        let settings = CursorNotifySettings(
+            fileManager: .default,
+            resourceDirectory: hooksRoot,
+            hooksDirectory: hooksDirectory,
+            envFileURL: hooksDirectory.appendingPathComponent("notify.env"),
+            cursorDirectory: cursorRoot,
+            approvalMonitor: monitor,
+            autoMigrate: false,
+            startMonitor: false
+        )
+
+        await settings.installHooks()
+        await settings.uninstallHooks()
+
+        XCTAssertFalse(settings.isInstalled)
+        XCTAssertEqual(settings.setupStatus, "Cursor push hooks uninstalled.")
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: hooksDirectory.appendingPathComponent("on-stop.sh").path
+            )
+        )
+        let env = CursorNotifyEnvFile(
+            contents: try String(
+                contentsOf: hooksDirectory.appendingPathComponent("notify.env"),
+                encoding: .utf8
+            )
+        )
+        XCTAssertFalse(env.isEnabled)
+        XCTAssertFalse(env.isApproveEnabled)
+    }
 }
 
 private final class MockSettingsNtfySender: CursorNtfySending {

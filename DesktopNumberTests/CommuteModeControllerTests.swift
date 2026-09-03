@@ -6,6 +6,8 @@ final class MockPowerManagementClient: PowerManagementClient {
     var passwordlessAccess = true
     var officeStatus = OfficePowerStatus.evaluate(isOnACPower: true, acSleepMinutes: 0)
     var setSleepDisabledCalls: [Bool] = []
+    var enableOfficePowerModeCalls = 0
+    var enableOfficePowerModeError: Error?
 
     func isSleepDisabled() throws -> Bool {
         sleepDisabled
@@ -18,6 +20,14 @@ final class MockPowerManagementClient: PowerManagementClient {
 
     func officePowerStatus() throws -> OfficePowerStatus {
         officeStatus
+    }
+
+    func enableOfficePowerMode() throws {
+        enableOfficePowerModeCalls += 1
+        if let enableOfficePowerModeError {
+            throw enableOfficePowerModeError
+        }
+        officeStatus = OfficePowerStatus.evaluate(isOnACPower: true, acSleepMinutes: 0)
     }
 
     func hasPasswordlessPmsetAccess() -> Bool {
