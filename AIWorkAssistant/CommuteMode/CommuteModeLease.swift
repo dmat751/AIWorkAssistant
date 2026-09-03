@@ -57,7 +57,7 @@ struct CommuteModeLease: Codable, Equatable {
 }
 
 struct CommuteModeStateStore {
-    static let directoryName = "DesktopNumber"
+    static let directoryName = "AIWorkAssistant"
     static let leaseFileName = "commute-mode.json"
 
     private let fileManager = FileManager.default

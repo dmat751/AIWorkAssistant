@@ -1,5 +1,5 @@
 import XCTest
-@testable import DesktopNumber
+@testable import AIWorkAssistant
 
 final class CursorAuthReaderTests: XCTestCase {
     func testExtractUserIdFromPrefixedToken() throws {

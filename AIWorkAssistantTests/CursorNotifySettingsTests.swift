@@ -1,5 +1,5 @@
 import XCTest
-@testable import DesktopNumber
+@testable import AIWorkAssistant
 
 final class CursorNotifyEnvFileTests: XCTestCase {
     func testMissingEnabledKeyDefaultsToDisabled() {
@@ -99,7 +99,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testRefreshReadsInstalledStateAndEnvFile() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let hookURL = directory.appendingPathComponent("on-stop.sh")
@@ -122,7 +122,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testRefreshDetectsPartialInstallAsNeedingMigration() throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
         let hooksDirectory = cursorRoot.appendingPathComponent("hooks", isDirectory: true)
         try FileManager.default.createDirectory(at: hooksDirectory, withIntermediateDirectories: true)
@@ -165,7 +165,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testSetApproveEnabledWritesToEnvFile() async throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let hookURL = directory.appendingPathComponent("on-stop.sh")
@@ -184,7 +184,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testSetEnabledWritesToEnvFile() async throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let hookURL = directory.appendingPathComponent("on-stop.sh")
@@ -205,7 +205,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testSetEnabledInstallsStopHookWhenEnabled() async throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         let hooksRoot = root.appendingPathComponent("CursorHooks", isDirectory: true)
         let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
         try FileManager.default.createDirectory(at: cursorRoot, withIntermediateDirectories: true)
@@ -256,7 +256,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testSetTopicWritesToEnvFile() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let hookURL = directory.appendingPathComponent("on-stop.sh")
@@ -275,7 +275,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testSendTestPushRequiresTopic() async {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
         let hookURL = directory.appendingPathComponent("on-stop.sh")
@@ -292,7 +292,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testInstallHooksCreatesScriptsAndHooksJSON() async throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         let hooksRoot = root.appendingPathComponent("CursorHooks", isDirectory: true)
         let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
         try FileManager.default.createDirectory(at: cursorRoot, withIntermediateDirectories: true)
@@ -344,7 +344,7 @@ final class CursorNotifySettingsTests: XCTestCase {
 
     func testUninstallHooksRemovesScriptsAndDisablesFlags() async throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberNotifyTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantNotifyTests-\(UUID().uuidString)", isDirectory: true)
         let hooksRoot = root.appendingPathComponent("CursorHooks", isDirectory: true)
         let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
         try FileManager.default.createDirectory(at: cursorRoot, withIntermediateDirectories: true)

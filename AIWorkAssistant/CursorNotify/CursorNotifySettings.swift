@@ -306,7 +306,7 @@ final class CursorNotifySettings: ObservableObject {
         do {
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
-            request.httpBody = "DesktopNumber: test push".data(using: .utf8)
+            request.httpBody = "AI Work Assistant: test push".data(using: .utf8)
 
             let (_, response) = try await URLSession.shared.data(for: request)
             if let http = response as? HTTPURLResponse, !(200 ... 299).contains(http.statusCode) {

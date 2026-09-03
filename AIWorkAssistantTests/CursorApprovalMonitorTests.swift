@@ -1,5 +1,5 @@
 import XCTest
-@testable import DesktopNumber
+@testable import AIWorkAssistant
 
 @MainActor
 final class CursorApprovalMonitorTests: XCTestCase {
@@ -104,7 +104,7 @@ final class CursorApprovalMonitorTests: XCTestCase {
 
     func testPollReadsNewApprovalLinesFromLogFile() async throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberApprovalMonitor-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantApprovalMonitor-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let fileURL = root.appendingPathComponent("Cursor Structured Logs.test.log")
         try "".write(to: fileURL, atomically: true, encoding: .utf8)

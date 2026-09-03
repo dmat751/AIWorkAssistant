@@ -401,7 +401,7 @@ struct CursorNotifyInstaller {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.httpBody = "DesktopNumber: Cursor notify hooks installed".data(using: .utf8)
+        request.httpBody = "AI Work Assistant: Cursor notify hooks installed".data(using: .utf8)
 
         let semaphore = DispatchSemaphore(value: 0)
         var requestError: Error?

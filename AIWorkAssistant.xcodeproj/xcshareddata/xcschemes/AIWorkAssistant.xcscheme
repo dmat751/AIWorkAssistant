@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A10000060000000000000001"
-               BuildableName = "DesktopNumber.app"
-               BlueprintName = "DesktopNumber"
-               ReferencedContainer = "container:DesktopNumber.xcodeproj">
+               BuildableName = "AIWorkAssistant.app"
+               BlueprintName = "AIWorkAssistant"
+               ReferencedContainer = "container:AIWorkAssistant.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B10000060000000000000001"
-               BuildableName = "DesktopNumberTests.xctest"
-               BlueprintName = "DesktopNumberTests"
-               ReferencedContainer = "container:DesktopNumber.xcodeproj">
+               BuildableName = "AIWorkAssistantTests.xctest"
+               BlueprintName = "AIWorkAssistantTests"
+               ReferencedContainer = "container:AIWorkAssistant.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A10000060000000000000001"
-            BuildableName = "DesktopNumber.app"
-            BlueprintName = "DesktopNumber"
-            ReferencedContainer = "container:DesktopNumber.xcodeproj">
+            BuildableName = "AIWorkAssistant.app"
+            BlueprintName = "AIWorkAssistant"
+            ReferencedContainer = "container:AIWorkAssistant.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A10000060000000000000001"
-            BuildableName = "DesktopNumber.app"
-            BlueprintName = "DesktopNumber"
-            ReferencedContainer = "container:DesktopNumber.xcodeproj">
+            BuildableName = "AIWorkAssistant.app"
+            BlueprintName = "AIWorkAssistant"
+            ReferencedContainer = "container:AIWorkAssistant.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

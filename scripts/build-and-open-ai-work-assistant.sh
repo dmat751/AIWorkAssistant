@@ -2,13 +2,13 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_PATH="${REPO_ROOT}/build/Build/Products/Release/DesktopNumber.app"
+APP_PATH="${REPO_ROOT}/build/Build/Products/Release/AIWorkAssistant.app"
 
 cd "$REPO_ROOT"
 
-echo "Building DesktopNumber (Release)..."
+echo "Building AIWorkAssistant (Release)..."
 xcodebuild \
-  -scheme DesktopNumber \
+  -scheme AIWorkAssistant \
   -configuration Release \
   -derivedDataPath build \
   build

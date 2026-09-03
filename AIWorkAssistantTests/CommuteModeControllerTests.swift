@@ -1,5 +1,5 @@
 import XCTest
-@testable import DesktopNumber
+@testable import AIWorkAssistant
 
 final class MockPowerManagementClient: PowerManagementClient {
     var sleepDisabled = false
@@ -59,7 +59,7 @@ final class MockThermalStateReader: ThermalStateReader {
 final class CommuteModeLeaseTests: XCTestCase {
     func testLeaseRoundTrip() throws {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantTests-\(UUID().uuidString)", isDirectory: true)
         let leaseURL = directory.appendingPathComponent("commute-mode.json")
         let store = CommuteModeStateStore(customLeaseURL: leaseURL)
 

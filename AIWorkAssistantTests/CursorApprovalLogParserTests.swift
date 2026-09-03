@@ -1,5 +1,5 @@
 import XCTest
-@testable import DesktopNumber
+@testable import AIWorkAssistant
 
 final class CursorApprovalLogParserTests: XCTestCase {
     func testParsesStructuredShellApprovalAsPending() {
@@ -102,7 +102,7 @@ final class CursorApprovalLogParserTests: XCTestCase {
 final class CursorApprovalLogTailerTests: XCTestCase {
     func testReadsOnlyNewLinesAndHandlesPartialLine() throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberApprovalTailer-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantApprovalTailer-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let fileURL = root.appendingPathComponent("Structured Logs.test.log")
         try "line one\nline two\n".write(to: fileURL, atomically: true, encoding: .utf8)
@@ -121,7 +121,7 @@ final class CursorApprovalLogTailerTests: XCTestCase {
 
     func testDiscoversStructuredAndAllowlistLogs() throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberApprovalTailer-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantApprovalTailer-\(UUID().uuidString)", isDirectory: true)
         let nested = root.appendingPathComponent("window/exthost", isDirectory: true)
         try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
         try "#".write(

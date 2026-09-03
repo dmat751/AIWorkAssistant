@@ -1,5 +1,5 @@
 import XCTest
-@testable import DesktopNumber
+@testable import AIWorkAssistant
 
 final class CommutePermissionInstallerTests: XCTestCase {
     func testEscapeForAppleScriptShellEscapesQuotesAndBackslashes() {
@@ -17,7 +17,7 @@ final class CommutePermissionInstallerTests: XCTestCase {
     func testInstallShellCommandIncludesSudoUserAndScriptPath() {
         let command = CommutePermissionInstaller.installShellCommand(
             username: "testuser",
-            scriptPath: "/Applications/DesktopNumber.app/Contents/Resources/CommuteScripts/install-commute-permission.sh"
+            scriptPath: "/Applications/AIWorkAssistant.app/Contents/Resources/CommuteScripts/install-commute-permission.sh"
         )
 
         XCTAssertTrue(command.hasPrefix("export SUDO_USER='testuser'; /bin/bash "))
@@ -27,11 +27,11 @@ final class CommutePermissionInstallerTests: XCTestCase {
     func testInstallShellCommandEscapesSpacesInPath() {
         let command = CommutePermissionInstaller.installShellCommand(
             username: "test user",
-            scriptPath: "/My Apps/DesktopNumber.app/Contents/Resources/CommuteScripts/install-commute-permission.sh"
+            scriptPath: "/My Apps/AIWorkAssistant.app/Contents/Resources/CommuteScripts/install-commute-permission.sh"
         )
 
         XCTAssertTrue(command.contains("export SUDO_USER='test user'"))
-        XCTAssertTrue(command.contains("'/My Apps/DesktopNumber.app/Contents/Resources/CommuteScripts/install-commute-permission.sh'"))
+        XCTAssertTrue(command.contains("'/My Apps/AIWorkAssistant.app/Contents/Resources/CommuteScripts/install-commute-permission.sh'"))
     }
 
     func testInstallInvokesPrivilegedRunnerWithShellCommand() throws {
@@ -55,12 +55,12 @@ final class CommutePermissionInstallerTests: XCTestCase {
 
     func testUninstallShellCommandEscapesSpacesInPath() {
         let command = CommutePermissionInstaller.uninstallShellCommand(
-            scriptPath: "/My Apps/DesktopNumber.app/Contents/Resources/CommuteScripts/uninstall-commute-permission.sh"
+            scriptPath: "/My Apps/AIWorkAssistant.app/Contents/Resources/CommuteScripts/uninstall-commute-permission.sh"
         )
 
         XCTAssertEqual(
             command,
-            "/bin/bash '/My Apps/DesktopNumber.app/Contents/Resources/CommuteScripts/uninstall-commute-permission.sh'"
+            "/bin/bash '/My Apps/AIWorkAssistant.app/Contents/Resources/CommuteScripts/uninstall-commute-permission.sh'"
         )
     }
 }

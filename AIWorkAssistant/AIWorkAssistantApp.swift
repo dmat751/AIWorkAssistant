@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct DesktopNumberApp: App {
+struct AIWorkAssistantApp: App {
     @StateObject private var spaceObserver = SpaceObserver()
     @StateObject private var usageObserver = CursorUsageObserver()
     @StateObject private var commuteController = CommuteModeController()

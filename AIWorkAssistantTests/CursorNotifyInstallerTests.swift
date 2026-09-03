@@ -1,5 +1,5 @@
 import XCTest
-@testable import DesktopNumber
+@testable import AIWorkAssistant
 
 final class CursorNotifyInstallerTests: XCTestCase {
     private func mergeHooks(existingData: Data?) throws -> [String: Any] {
@@ -42,7 +42,7 @@ final class CursorNotifyInstallerTests: XCTestCase {
 
     func testInstallCopiesHookScriptsAndSkipsPermissionHooks() throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberInstallerTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantInstallerTests-\(UUID().uuidString)", isDirectory: true)
         let hooksRoot = root.appendingPathComponent("CursorHooks", isDirectory: true)
         let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
         try copyBundledHooks(to: hooksRoot)
@@ -173,7 +173,7 @@ final class CursorNotifyInstallerTests: XCTestCase {
 
     func testMigrateIfNeededRemovesStaleApprovalHooks() throws {
         let root = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DesktopNumberInstallerTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("AIWorkAssistantInstallerTests-\(UUID().uuidString)", isDirectory: true)
         let hooksRoot = root.appendingPathComponent("CursorHooks", isDirectory: true)
         let cursorRoot = root.appendingPathComponent(".cursor", isDirectory: true)
         try copyBundledHooks(to: hooksRoot)

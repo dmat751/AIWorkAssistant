@@ -118,7 +118,7 @@ struct MenuBarContentView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("Finish pushes use Cursor stop hooks. Approve pushes use DesktopNumber log monitoring.")
+            Text("Finish pushes use Cursor stop hooks. Approve pushes use AI Work Assistant log monitoring.")
                 .font(.caption2)
                 .foregroundStyle(.secondary)
 
