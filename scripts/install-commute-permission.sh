@@ -12,11 +12,11 @@ if [[ -z "$USERNAME" || "$USERNAME" == "root" ]]; then
   exit 1
 fi
 
-SUDOERS_FILE="/etc/sudoers.d/desktopnumber-commute"
+SUDOERS_FILE="/etc/sudoers.d/aiworkassistant-commute"
 TMP_FILE="$(mktemp)"
 
 cat >"$TMP_FILE" <<EOF
-# DesktopNumber commute mode — narrowly scoped pmset disablesleep access
+# AI Work Assistant commute mode — narrowly scoped pmset disablesleep access
 ${USERNAME} ALL=(ALL) NOPASSWD: /usr/bin/pmset -a disablesleep 1, /usr/bin/pmset -a disablesleep 0
 EOF
 

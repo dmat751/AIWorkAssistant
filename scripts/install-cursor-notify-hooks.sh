@@ -99,7 +99,7 @@ topic="$(grep -E '^NTFY_TOPIC=' "$NOTIFY_ENV" | cut -d= -f2- || true)"
 echo ""
 if [[ -n "$topic" && "$topic" != "your-topic-name" ]]; then
   echo "Sending test notification to ntfy.sh/${topic}..."
-  if curl -fsS -d "DesktopNumber: Cursor notify hooks installed" "https://ntfy.sh/${topic}"; then
+  if curl -fsS -d "AI Work Assistant: Cursor notify hooks installed" "https://ntfy.sh/${topic}"; then
     echo ""
     echo "Test notification sent."
   else

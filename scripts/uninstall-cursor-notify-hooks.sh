@@ -58,12 +58,12 @@ elif "hooks" in data:
 hooks_json.write_text(json.dumps(data, indent=2) + "\n")
 PY
 
-  echo "Removed DesktopNumber hook entries from ${HOOKS_JSON}"
+  echo "Removed AI Work Assistant hook entries from ${HOOKS_JSON}"
   removed_any=true
 fi
 
 if [[ "$removed_any" == false ]]; then
-  echo "No DesktopNumber Cursor notify hooks found."
+  echo "No AI Work Assistant Cursor notify hooks found."
 else
   echo "Uninstalled Cursor notify hooks."
   echo "Restart Cursor to apply changes."
